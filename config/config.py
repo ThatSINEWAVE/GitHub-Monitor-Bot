@@ -15,7 +15,7 @@ class Config:
     GITHUB_API_URL = "https://api.github.com/user/repos"
 
     # Application configuration
-    CHECK_INTERVAL = 1  # seconds
+    CHECK_INTERVAL = 300  # 5 minutes in seconds
     DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
     REPOSITORIES_FILE = os.path.join(DATA_DIR, "repositories.json")
 
