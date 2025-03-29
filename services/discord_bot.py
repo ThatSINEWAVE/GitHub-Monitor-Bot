@@ -63,6 +63,10 @@ class DiscordBot:
             return
 
         repo = change["repo"]
+        logger.info(
+            f"Preparing to send {change['type']} star notification for {repo['full_name']}"
+        )
+
         embed = discord.Embed(
             title=f"Star Update for {repo['name']}",
             url=repo["url"],
@@ -97,15 +101,20 @@ class DiscordBot:
                 # Add a random thank-you message
                 thank_msg = random.choice(self.thank_you_messages)
                 embed.add_field(name="Message", value=thank_msg, inline=False)
+                logger.info(
+                    f"Sending new star notification from {latest_stargazer['username']}"
+                )
             elif star_count_diff == 1:
                 # Fallback if no user information is available
                 embed.description = f"🌟 **New Star Added!**"
                 # Add a random thank-you message even without knowing who starred
                 thank_msg = random.choice(self.thank_you_messages)
                 embed.add_field(name="Message", value=thank_msg, inline=False)
+                logger.info("Sending new star notification (unknown user)")
             else:
                 # Multiple stars added
                 embed.description = f"🌟 **{star_count_diff} New Stars Added!**"
+                logger.info(f"Sending notification for {star_count_diff} new stars")
 
                 # List users who starred if available
                 if users:
@@ -147,15 +156,20 @@ class DiscordBot:
                 # Add a random message for removed star
                 removed_msg = random.choice(self.star_removed_messages)
                 embed.add_field(name="Message", value=removed_msg, inline=False)
+                logger.info(
+                    f"Sending removed star notification for {removed_user['username']}"
+                )
             elif star_count_diff == 1:
                 # Fallback if no user information is available
                 embed.description = f"💔 **Star Removed**"
                 # Add a random message for removed star
                 removed_msg = random.choice(self.star_removed_messages)
                 embed.add_field(name="Message", value=removed_msg, inline=False)
+                logger.info("Sending removed star notification (unknown user)")
             else:
                 # Multiple stars removed
                 embed.description = f"💔 **{star_count_diff} Stars Removed**"
+                logger.info(f"Sending notification for {star_count_diff} removed stars")
 
                 # List users who removed stars if available
                 if users:
@@ -201,6 +215,9 @@ class DiscordBot:
                     value=f"Congratulations! The repository has reached **{current_stars} stars**! Thank you to everyone who has supported this project!",
                     inline=False,
                 )
+                logger.info(
+                    f"Milestone reached: {current_stars} stars for {repo['full_name']}"
+                )
 
         # Add footer with timestamp info
         embed.set_footer(
@@ -209,7 +226,9 @@ class DiscordBot:
 
         try:
             await self.channel.send(embed=embed)
-            logger.info(f"Sent star update notification for {repo['name']}")
+            logger.info(
+                f"Successfully sent star update notification for {repo['name']}"
+            )
         except Exception as e:
             logger.error(f"Failed to send star update: {e}")
 
