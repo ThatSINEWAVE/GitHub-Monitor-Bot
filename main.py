@@ -48,21 +48,24 @@ class GitHubStarMonitor:
 
     async def monitor_github_stars(self):
         """Monitor GitHub repositories for star changes."""
-        logger.info("Starting GitHub star monitoring")
+        logger.info("Starting GitHub star monitoring with 5-minute intervals")
 
-        # Load existing repository data
+        # Initial load of repository data
         old_repos = self.github_api.load_repositories_data()
 
-        # If this is the first run, or we don't have stargazers data,
-        # fetch all stargazers for existing repositories
-        if old_repos and not old_repos[0].get("stargazers"):
-            logger.info("Initializing stargazers data for repositories...")
+        # If this is the first run or data is empty, fetch fresh data
+        if not old_repos:
+            logger.info("No existing repository data found. Fetching initial data...")
+            raw_repos = await self.github_api.get_all_public_repositories()
+            old_repos = self.github_api.parse_repository_data(raw_repos)
             old_repos = await self.github_api.update_stargazers_for_repos(old_repos)
             await self.github_api.save_repositories_data(old_repos)
-            logger.info("Stargazers data initialized.")
+            logger.info(f"Initialized data for {len(old_repos)} repositories")
 
         while self.running:
             try:
+                logger.info("Checking for star changes...")
+
                 # Fetch the latest repository data
                 raw_repos = await self.github_api.get_all_public_repositories()
                 new_repos = self.github_api.parse_repository_data(raw_repos)
@@ -73,19 +76,34 @@ class GitHubStarMonitor:
                 # Compare star counts
                 changes = self.github_api.compare_stars(old_repos, new_repos)
 
-                # Send notifications for changes
-                for change in changes:
-                    await self.discord_bot.send_star_update(change)
+                # Process changes
+                if changes:
+                    logger.info(f"Found {len(changes)} changes to process")
+                    for change in changes:
+                        repo_name = change["repo"]["full_name"]
+                        if change["type"] == "added":
+                            logger.info(
+                                f"Detected {change['difference']} new star(s) for {repo_name}"
+                            )
+                            await self.discord_bot.send_star_update(change)
+                        elif change["type"] == "removed":
+                            logger.info(
+                                f"Detected {change['difference']} removed star(s) for {repo_name}"
+                            )
+                            await self.discord_bot.send_star_update(change)
+                        elif change["type"] == "new":
+                            logger.info(f"Detected new repository: {repo_name}")
 
-                # Save the updated repository data
-                if changes or not old_repos:
+                    # Save the updated repository data
                     await self.github_api.save_repositories_data(new_repos)
                     old_repos = new_repos
-
-                    if changes:
-                        logger.info(f"Detected {len(changes)} star changes")
+                else:
+                    logger.info("No star changes detected")
 
                 # Wait before checking again
+                logger.info(
+                    f"Waiting {Config.CHECK_INTERVAL} seconds before next check..."
+                )
                 await asyncio.sleep(Config.CHECK_INTERVAL)
 
             except asyncio.CancelledError:
