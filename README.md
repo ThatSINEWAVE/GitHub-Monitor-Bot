@@ -35,7 +35,7 @@ A Discord bot that monitors GitHub repositories for star changes and sends notif
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/GitHub-Monitor-Bot.git
+   git clone https://github.com/ThatSINEWAVE/GitHub-Monitor-Bot.git
    cd GitHub-Monitor-Bot
    ```
 
