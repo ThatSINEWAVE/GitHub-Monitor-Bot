@@ -84,7 +84,7 @@ Once running, the bot will:
 
 <div align="center">
 
-## [Join my Discord server](https://discord.gg/2nHHHBWNDw)
+## [Join my Discord server](https://thatsinewave.github.io/Discord-Redirect/)
 
 </div>
 
